@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { Link } from "react-router-dom";
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -48,12 +49,15 @@ const UserManagement = () => {
         await axios.delete(`http://localhost:8000/admin/users/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        fetchUsers();
+
+        // Hapus user dari state lokal
+        setUsers((prevUsers) => prevUsers.filter((u) => u.id !== id));
       } catch (error) {
         console.error('Gagal hapus user:', error);
       }
     }
   };
+
 
   const handleChangeRole = async (id, newRole) => {
     try {
@@ -113,119 +117,247 @@ const UserManagement = () => {
   };
 
   return (
-    <div className="container mt-4">
-      <h2>Kelola Pengguna</h2>
+    <div className="min-vh-100" style={{ backgroundColor: '#f8f9fa' }}>
+      <div className="container py-5">
 
-      <form onSubmit={editMode ? handleUpdateUser : handleCreateUser} className="mb-4">
-        <h4>{editMode ? 'Edit User' : 'Tambah User Baru'}</h4>
-        <div className="mb-2">
-          <input
-            type="text"
-            name="nama"
-            placeholder="Nama"
-            className="form-control"
-            value={formData.nama}
-            onChange={handleInputChange}
-            required
-          />
+        {/* Header */}
+        <div className="text-center mb-5">
+          <h1 className="display-5 fw-bold text-primary">Kelola Pengguna</h1>
+          <p className="lead text-muted">Manajemen pengguna dan hak akses sistem</p>
+          <hr className="w-25 mx-auto" style={{ height: '3px', backgroundColor: '#0d6efd' }} />
         </div>
-        <div className="mb-2">
-          <input
-            type="text"
-            name="no_telepon"
-            placeholder="No Telepon"
-            className="form-control"
-            value={formData.no_telepon}
-            onChange={handleInputChange}
-            required
-          />
-        </div>
-        <div className="mb-2">
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            className="form-control"
-            value={formData.email}
-            onChange={handleInputChange}
-            required
-          />
-        </div>
-        <div className="mb-2">
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            className="form-control"
-            value={formData.password}
-            onChange={handleInputChange}
-            required={!editMode}
-          />
-        </div>
-        <button className="btn btn-primary me-2" type="submit">
-          {editMode ? 'Update User' : 'Tambah User'}
-        </button>
-        {editMode && (
-          <button
-            className="btn btn-secondary"
-            type="button"
-            onClick={() => {
-              setEditMode(false);
-              setEditId(null);
-              setFormData({ nama: '', no_telepon: '', email: '', password: '' });
-            }}
-          >
-            Batal
-          </button>
-        )}
-      </form>
 
-      <table className="table table-bordered">
-        <thead className="table-dark">
-          <tr>
-            <th>Nama</th>
-            <th>Email</th>
-            <th>No Telepon</th>
-            <th>Role</th>
-            <th>Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((u) => (
-            <tr key={u.id}>
-              <td>{u.nama}</td>
-              <td>{u.email}</td>
-              <td>{u.no_telepon}</td>
-              <td>
-                {currentAdminId === u.id ? (
-                  <span className="text-muted">({u.role})</span>
-                ) : (
-                  <select
-                    className="form-select"
-                    value={u.role}
-                    onChange={(e) => handleChangeRole(u.id, e.target.value)}
+        {/* Form */}
+        <div className="card shadow border-0 mb-5">
+          <div className="card-header bg-primary text-white">
+            <h5 className="mb-0">
+              <i className={`bi ${editMode ? 'bi-pencil-square' : 'bi-person-plus'} me-2`}></i>
+              {editMode ? 'Edit User' : 'Tambah User Baru'}
+            </h5>
+          </div>
+          <div className="card-body">
+            <form onSubmit={editMode ? handleUpdateUser : handleCreateUser}>
+              <div className="row g-3">
+                <div className="col-md-6">
+                  <label className="form-label">Nama</label>
+                  <input
+                    type="text"
+                    name="nama"
+                    value={formData.nama}
+                    onChange={handleInputChange}
+                    className="form-control"
+                    required
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label">No Telepon</label>
+                  <input
+                    type="text"
+                    name="no_telepon"
+                    value={formData.no_telepon}
+                    onChange={handleInputChange}
+                    className="form-control"
+                    required
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="form-control"
+                    required
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label">Password</label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    className="form-control"
+                    placeholder={editMode ? "Kosongkan jika tidak diubah" : "Masukkan password"}
+                    required={!editMode}
+                  />
+                </div>
+              </div>
+              <div className="mt-4 d-flex justify-content-end gap-2">
+                {editMode && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditMode(false);
+                      setEditId(null);
+                      setFormData({ nama: '', no_telepon: '', email: '', password: '' });
+                    }}
+                    className="btn btn-secondary"
                   >
-                    <option value="tamu">Tamu</option>
-                    <option value="admin">Admin</option>
-                  </select>
+                    Batal
+                  </button>
                 )}
-              </td>
-              <td>
-                {currentAdminId !== u.id && (
-                  <>
-                    <button
-                      className="btn btn-sm btn-danger"
-                      onClick={() => handleDelete(u.id)}
-                    >
-                      Hapus
-                    </button>
-                  </>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                <button type="submit" className="btn btn-primary">
+                  {editMode ? 'Update' : 'Tambah'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="card shadow border-0">
+          <div className="card-header bg-dark text-white">
+            <h5 className="mb-0"><i className="bi bi-people me-2"></i>Daftar Pengguna</h5>
+          </div>
+          <div className="card-body p-0">
+            <div className="table-responsive">
+              <table className="table table-hover mb-0">
+                <thead className="table-dark">
+                  <tr>
+                    <th>Nama</th>
+                    <th>Email</th>
+                    <th>No Telepon</th>
+                    <th>Role</th>
+                    <th className="text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map((u) => (
+                    <tr key={u.id}>
+                      {editId === u.id ? (
+                        <>
+                          {/* Editable row */}
+                          <td>
+                            <input
+                              type="text"
+                              name="nama"
+                              className="form-control form-control-sm"
+                              value={formData.nama}
+                              onChange={handleInputChange}
+                              required
+                            />
+                          </td>
+                          <td>
+                            <input
+                              type="email"
+                              name="email"
+                              className="form-control form-control-sm"
+                              value={formData.email}
+                              onChange={handleInputChange}
+                              required
+                            />
+                          </td>
+                          <td>
+                            <input
+                              type="text"
+                              name="no_telepon"
+                              className="form-control form-control-sm"
+                              value={formData.no_telepon}
+                              onChange={handleInputChange}
+                              required
+                            />
+                          </td>
+                          <td>
+                            <select
+                              className="form-select form-select-sm"
+                              name="role"
+                              value={u.role}
+                              onChange={(e) => handleChangeRole(u.id, e.target.value)}
+                              style={{ maxWidth: "120px" }}
+                            >
+                              <option value="admin">Admin</option>
+                              <option value="tamu">Tamu</option>
+                            </select>
+                          </td>
+                          <td className="text-center">
+                            <div className="d-flex justify-content-center gap-2">
+                              <button
+                                className="btn btn-sm btn-success"
+                                title="Simpan"
+                                onClick={handleUpdateUser}
+                              >
+                                <i className="fas fa-check"></i>
+                              </button>
+                              <button
+                                className="btn btn-sm btn-secondary"
+                                title="Batal"
+                                onClick={() => {
+                                  setEditId(null);
+                                  setEditMode(false);
+                                  setFormData({ nama: '', no_telepon: '', email: '', password: '' });
+                                }}
+                              >
+                                <i className="fas fa-times"></i>
+                              </button>
+                            </div>
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          {/* Static row */}
+                          <td>{u.nama}</td>
+                          <td>{u.email}</td>
+                          <td>{u.no_telepon}</td>
+                          <td>
+                            {currentAdminId === u.id ? (
+                              <span className="badge bg-success">Admin (Anda)</span>
+                            ) : (
+                              <select
+                                className="form-select form-select-sm"
+                                style={{ maxWidth: "120px" }}
+                                value={u.role}
+                                onChange={(e) => handleChangeRole(u.id, e.target.value)}
+                              >
+                                <option value="admin">Admin</option>
+                                <option value="tamu">Tamu</option>
+                              </select>
+                            )}
+                          </td>
+                          <td className="text-center">
+                            {currentAdminId !== u.id && (
+                              <div className="d-flex justify-content-center gap-2">
+                                <button
+                                  className="btn btn-outline-primary btn-sm"
+                                  onClick={() => handleEditClick(u)}
+                                  title="Edit User"
+                                >
+                                  <i className="fas fa-edit"></i>
+                                </button>
+                                <button
+                                  className="btn btn-outline-danger btn-sm"
+                                  onClick={() => handleDelete(u.id)}
+                                  title="Hapus User"
+                                >
+                                  <i className="fas fa-trash"></i>
+                                </button>
+                              </div>
+                            )}
+                          </td>
+                        </>
+                      )}
+                    </tr>
+                  ))}
+                  {users.length === 0 && (
+                    <tr>
+                      <td colSpan="5" className="text-center py-4 text-muted">
+                        Belum ada pengguna.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+
+              </table>
+            </div>
+          </div>
+        </div>
+        <div className="mt-3 mb-4">
+        <Link to="/admin/dashboard" className="btn btn-secondary">
+          &larr; Kembali ke Dashboard
+        </Link>
+      </div>
+      </div>
     </div>
   );
 };

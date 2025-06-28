@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 export default function LoginPage() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    username: "",
+    email: "",
     password: "",
   });
   const [error, setError] = useState("");
@@ -26,7 +26,10 @@ export default function LoginPage() {
       const response = await fetch("http://localhost:8000/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          username: formData.email, // ← penting!
+          password: formData.password,
+        }),
       });
 
       if (!response.ok) {
@@ -35,11 +38,9 @@ export default function LoginPage() {
       }
 
       const data = await response.json();
-      // Simpan token ke localStorage
       localStorage.setItem("token", data.access_token);
       localStorage.setItem("role", data.role);
 
-      // Redirect sesuai role
       if (data.role === "admin") {
         navigate("/admin/dashboard");
       } else if (data.role === "tamu") {
@@ -53,6 +54,7 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="container d-flex justify-content-center align-items-center min-vh-100">
@@ -70,8 +72,8 @@ export default function LoginPage() {
             <input
               type="email"
               className="form-control"
-              name="username"
-              value={formData.username}
+              name="email"
+              value={formData.email}
               onChange={handleChange}
               required
             />

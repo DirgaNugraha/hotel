@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends, Body, Header
+from fastapi import FastAPI, HTTPException, Depends, Body, Header, Path
 from sqlalchemy.orm import Session
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -158,7 +158,8 @@ def create_reservasi(
 
     checkin = datetime.strptime(tgl_in, "%Y-%m-%d").date()
     checkout = datetime.strptime(tgl_out, "%Y-%m-%d").date()
-    today = datetime.utcnow().date()
+    today = datetime.now().date()
+
     if checkin < today or checkout <= checkin:
         raise HTTPException(status_code=400, detail="Tanggal tidak valid")
 
@@ -169,7 +170,7 @@ def create_reservasi(
         tanggal_checkin=checkin,
         tanggal_checkout=checkout,
         status="pending",
-        created_at=datetime.utcnow()
+        created_at=datetime.now().date()
     )
     kamar.status = "terisi"
     db.add(reservasi)
@@ -180,7 +181,46 @@ def create_reservasi(
 def list_reservasi_user(db: Session = Depends(get_db), user: models.User = Depends(get_current_tamu)):
     return db.query(models.Reservasi).filter(models.Reservasi.id_user == user.id).all()
 
-# USER - Batal reservasi
+@app.put("/user/reservasi/{id}")
+def update_reservasi_user(
+    id: int = Path(...),
+    payload: dict = Body(...),
+    db: Session = Depends(get_db),
+    user: models.User = Depends(get_current_tamu)
+):
+    reservasi = db.query(models.Reservasi).filter(
+        models.Reservasi.id == id,
+        models.Reservasi.id_user == user.id
+    ).first()
+
+    if not reservasi:
+        raise HTTPException(status_code=404, detail="Reservasi tidak ditemukan")
+
+    tgl_in = payload.get("tanggal_checkin")
+    tgl_out = payload.get("tanggal_checkout")
+
+    if not tgl_in or not tgl_out:
+        raise HTTPException(status_code=400, detail="Tanggal check-in dan check-out wajib diisi.")
+
+    try:
+        checkin = datetime.strptime(tgl_in, "%Y-%m-%d").date()
+        checkout = datetime.strptime(tgl_out, "%Y-%m-%d").date()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Format tanggal tidak valid. Gunakan YYYY-MM-DD.")
+
+    today = datetime.now().date()
+
+    if checkin < today:
+        raise HTTPException(status_code=400, detail="Tanggal check-in tidak boleh di masa lalu.")
+    if checkout <= checkin:
+        raise HTTPException(status_code=400, detail="Tanggal check-out harus lebih dari check-in.")
+
+    reservasi.tanggal_checkin = checkin
+    reservasi.tanggal_checkout = checkout
+    db.commit()
+
+    return {"message": "Tanggal reservasi diperbarui"}
+
 @app.delete("/user/reservasi/{id}")
 def batal_reservasi(id: int, db: Session = Depends(get_db), user: models.User = Depends(get_current_tamu)):
     reservasi = db.query(models.Reservasi).filter(models.Reservasi.id == id, models.Reservasi.id_user == user.id).first()
@@ -316,6 +356,7 @@ def admin_delete_fasilitas(
     db.commit()
     return {"message": "Fasilitas dihapus"}
 
+# ADMIN - CRUD RESERVASI
 @app.get("/admin/reservasi")
 def admin_list_reservasi(
     db: Session = Depends(get_db),

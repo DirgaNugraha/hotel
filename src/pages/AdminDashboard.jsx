@@ -9,15 +9,12 @@ export default function AdminDashboard() {
     const fetchData = async () => {
       try {
         const headers = { Authorization: `Bearer ${token}` };
-
-        // Validasi token dengan salah satu endpoint admin
         const res = await fetch("http://localhost:8000/admin/users", { headers });
 
         if (!res.ok) {
           throw new Error("Gagal mengambil data. Pastikan Anda login sebagai admin.");
         }
 
-        // Jika berhasil, tidak perlu simpan data di state (atau bisa simpan kalau mau)
         await res.json();
       } catch (err) {
         console.error(err);
@@ -42,22 +39,38 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="container py-5">
-      <h2 className="mb-4 text-center">Dashboard Admin</h2>
+    <div className="min-vh-100" style={{ backgroundColor: "#f0f8ff" }}>
+      <div className="container py-5">
+        <div className="text-center mb-5">
+          <h1 className="display-5 fw-bold text-primary">Dashboard Admin</h1>
+          <p className="lead text-muted">Manajemen Sistem Aplikasi Hotel</p>
+          <hr className="w-25 mx-auto" style={{ height: '3px', backgroundColor: '#0d6efd' }} />
+        </div>
 
-      <div className="d-flex flex-wrap justify-content-center gap-4 mb-5">
-        <Link to="/admin/users" className="btn btn-outline-primary btn-lg">
-          Kelola Users
-        </Link>
-        <Link to="/admin/kamar" className="btn btn-outline-success btn-lg">
-          Kelola Kamar
-        </Link>
-        <Link to="/admin/fasilitas" className="btn btn-outline-warning btn-lg">
-          Kelola Fasilitas
-        </Link>
-        <Link to="/admin/reservasi" className="btn btn-outline-danger btn-lg">
-          Kelola Reservasi
-        </Link>
+        <div className="card shadow border-0 mx-auto" style={{ maxWidth: "500px" }}>
+          <ul className="list-group list-group-flush">
+            <li className="list-group-item d-grid">
+              <Link to="/admin/users" className="btn btn-primary btn-lg w-100">
+                Kelola Users
+              </Link>
+            </li>
+            <li className="list-group-item d-grid">
+              <Link to="/admin/kamar" className="btn btn-primary btn-lg w-100">
+                Kelola Kamar
+              </Link>
+            </li>
+            <li className="list-group-item d-grid">
+              <Link to="/admin/fasilitas" className="btn btn-primary btn-lg w-100">
+                Kelola Fasilitas
+              </Link>
+            </li>
+            <li className="list-group-item d-grid">
+              <Link to="/admin/reservasi" className="btn btn-primary btn-lg w-100">
+                Kelola Reservasi
+              </Link>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   );

@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 
 export default function Navbar() {
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm sticky-top">
-      <div className="container">
+    <nav className="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm sticky-top w-100">
+      <div className="container-fluid justify-content-between px-3">
         <Link className="navbar-brand fw-bold" to="/">
           <i className="fas fa-hotel me-2"></i>Bumi Keluarga Hotel
         </Link>
@@ -19,19 +19,13 @@ export default function Navbar() {
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav ms-auto">
             <li className="nav-item">
-              <Link className="nav-link text-white" to="/">Home</Link>
+              <Link className="nav-link text-white px-3" to="/">Home</Link>
             </li>
             <li className="nav-item">
-              <a className="nav-link text-white" href="#about">About</a>
+              <Link className="nav-link text-white px-3" to="/login-ui">Login</Link>
             </li>
             <li className="nav-item">
-              <a className="nav-link text-white" href="#facilities">Fasilitas</a>
-            </li>
-            <li className="nav-item">
-              <Link className="nav-link text-white" to="/login-ui">Login</Link>
-            </li>
-            <li className="nav-item">
-              <Link className="nav-link text-white" to="/register-ui">Register</Link>
+              <Link className="nav-link text-white px-3" to="/register-ui">Register</Link>
             </li>
           </ul>
         </div>
