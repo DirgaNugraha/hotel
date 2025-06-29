@@ -139,18 +139,7 @@ export default function ReservasiManagement() {
                               />
                             </td>
                             <td>
-                              <select
-                                className="form-select form-select-sm"
-                                value={editForm.status || ""}
-                                onChange={(e) =>
-                                  setEditForm({ ...editForm, status: e.target.value })
-                                }
-                                required
-                              >
-                                <option value="pending">Pending</option>
-                                <option value="confirmed">Confirmed</option>
-                                <option value="cancelled">Cancelled</option>
-                              </select>
+                              <span className="badge bg-secondary">{r.status}</span>
                             </td>
                             <td className="text-center">
                               <div className="d-flex justify-content-center gap-2">

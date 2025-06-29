@@ -57,12 +57,12 @@ def get_current_user(
         raise HTTPException(status_code=401, detail="Skema token invalid")
     try:
         payload = jwt.decode(param, SECRET_KEY, algorithms=[ALGORITHM])
-        email = payload.get("sub")
-        if email is None:
+        user_id = payload.get("sub")
+        if user_id is None:
             raise HTTPException(status_code=401, detail="Token invalid")
     except JWTError:
         raise HTTPException(status_code=401, detail="Token invalid")
-    user = db.query(models.User).filter(models.User.email == email).first()
+    user = db.query(models.User).get(int(user_id))
     if not user:
         raise HTTPException(status_code=404, detail="User tidak ditemukan")
     return user
@@ -78,13 +78,13 @@ get_current_tamu = get_current_role("tamu")
 get_current_admin = get_current_role("admin")
 
 
-# Register
 @app.post("/users")
 def register_user(payload: dict = Body(...), db: Session = Depends(get_db)):
     nama = payload.get("nama")
     no_telepon = payload.get("no_telepon")
     email = payload.get("email")
     password = payload.get("password")
+    role = payload.get("role", "tamu")
 
     if not all([nama, no_telepon, email, password]):
         raise HTTPException(status_code=400, detail="Semua field wajib diisi.")
@@ -95,13 +95,18 @@ def register_user(payload: dict = Body(...), db: Session = Depends(get_db)):
     if len(password) < 4:
         raise HTTPException(status_code=400, detail="Password minimal 4 karakter.")
 
-    hashed = get_password_hash(password)
+    # Cek jika email sudah terdaftar
+    existing = db.query(models.User).filter(models.User.email == email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Email sudah terdaftar.")
+
+    hashed_password = get_password_hash(password)
     user = models.User(
         nama=nama,
         no_telepon=no_telepon,
         email=email,
-        password=hashed,
-        role="tamu",
+        password=hashed_password,
+        role=role,
         created_at=datetime.utcnow()
     )
     db.add(user)
@@ -109,25 +114,31 @@ def register_user(payload: dict = Body(...), db: Session = Depends(get_db)):
     db.refresh(user)
     return {"message": "Registrasi berhasil"}
 
-# Login
 @app.post("/login")
 def login(payload: dict = Body(...), db: Session = Depends(get_db)):
-    username = payload.get("username")
+    email = payload.get("email")
     password = payload.get("password")
 
-    if not username or not password:
+    if not email or not password:
         raise HTTPException(status_code=400, detail="Email dan password wajib diisi.")
 
-    user = db.query(models.User).filter(models.User.email == username).first()
-    if not user or not verify_password(password, user.password):
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if not user:
         raise HTTPException(status_code=401, detail="Email atau password salah.")
 
-    token = create_access_token({"sub": user.email})
+    print("DEBUG: Password input:", password)
+    print("DEBUG: Password hashed in DB:", user.password)
+
+    if not verify_password(password, user.password):
+        raise HTTPException(status_code=401, detail="Email atau password salah.")
+
+    token = create_access_token({"sub": str(user.id)})
     return {
         "access_token": token,
         "token_type": "bearer",
         "role": user.role
     }
+
 
 # PUBLIC - List Fasilitas
 @app.get("/fasilitas")
@@ -270,11 +281,14 @@ def admin_update_user(id: int, payload: dict = Body(...), db: Session = Depends(
 
     for k, v in payload.items():
         if k == "password":
-            setattr(target, k, get_password_hash(v))
+            if v:
+                target.password = get_password_hash(v)
         else:
             setattr(target, k, v)
     db.commit()
     return {"message": "User diperbarui"}
+
+
 
 @app.delete("/admin/users/{id}")
 def admin_delete_user(id: int, db: Session = Depends(get_db), user: models.User = Depends(get_current_admin)):

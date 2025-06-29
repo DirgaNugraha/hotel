@@ -159,10 +159,9 @@ export default function KamarManagement() {
               </div>
               <div className="col-md-6">
                 <label className="form-label">Status</label>
-                <select className="form-select" value={newForm.status} onChange={(e) => setNewForm({ ...newForm, status: e.target.value })}>
-                  <option value="tersedia">Tersedia</option>
-                  <option value="terisi">Terisi</option>
-                </select>
+                <div>
+                  <span className="badge bg-success">Tersedia</span>
+                </div>
               </div>
               <div className="col-12">
                 <label className="form-label">Deskripsi</label>
@@ -208,7 +207,7 @@ export default function KamarManagement() {
                           <td><input className="form-control form-control-sm" value={editForm.nomor_kamar} onChange={(e) => setEditForm({ ...editForm, nomor_kamar: e.target.value })} /></td>
                           <td><input className="form-control form-control-sm" value={editForm.tipe_kamar} onChange={(e) => setEditForm({ ...editForm, tipe_kamar: e.target.value })} /></td>
                           <td><input type="number" className="form-control form-control-sm" value={editForm.harga} onChange={(e) => setEditForm({ ...editForm, harga: e.target.value })} /></td>
-                          <td><select className="form-select form-select-sm" value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}><option value="tersedia">Tersedia</option><option value="terisi">Terisi</option></select></td>
+                          <td>  <span className={`badge ${editForm.status === "tersedia" ? "bg-success" : "bg-danger"}`}>{editForm.status}</span></td>
                           <td><input className="form-control form-control-sm" value={editForm.gambar_kamar} onChange={(e) => setEditForm({ ...editForm, gambar_kamar: e.target.value })} /></td>
                           <td><textarea className="form-control form-control-sm" value={editForm.deskripsi} onChange={(e) => setEditForm({ ...editForm, deskripsi: e.target.value })} /></td>
                           <td className="text-center">
