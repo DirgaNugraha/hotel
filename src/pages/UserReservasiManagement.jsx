@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 export default function UserReservasiManagement() {
   const [reservasi, setReservasi] = useState([]);
@@ -79,9 +81,7 @@ export default function UserReservasiManagement() {
       'cancelled': { class: 'bg-danger', icon: 'times-circle', text: 'Dibatalkan' },
       'completed': { class: 'bg-info', icon: 'check-double', text: 'Selesai' }
     };
-    
     const config = statusConfig[status] || { class: 'bg-secondary', icon: 'question', text: status };
-    
     return (
       <span className={`badge ${config.class} px-3 py-2 rounded-pill`}>
         <i className={`fas fa-${config.icon} me-1`}></i>
@@ -128,7 +128,6 @@ export default function UserReservasiManagement() {
   return (
     <div className="bg-light min-vh-100">
       <div className="container py-5">
-        {/* Header Section */}
         <div className="row mb-4">
           <div className="col-12">
             <div className="d-flex align-items-center justify-content-between flex-wrap gap-3">
@@ -145,7 +144,6 @@ export default function UserReservasiManagement() {
           </div>
         </div>
 
-        {/* Content Section */}
         {reservasi.length === 0 ? (
           <div className="row justify-content-center">
             <div className="col-md-6">
@@ -180,24 +178,12 @@ export default function UserReservasiManagement() {
                     <table className="table table-hover mb-0">
                       <thead className="table-dark">
                         <tr>
-                          <th className="py-3 px-4">
-                            <i className="fas fa-hashtag me-2"></i>ID
-                          </th>
-                          <th className="py-3 px-4">
-                            <i className="fas fa-door-open me-2"></i>Nomor Kamar
-                          </th>
-                          <th className="py-3 px-4">
-                            <i className="fas fa-calendar-check me-2"></i>Check-in
-                          </th>
-                          <th className="py-3 px-4">
-                            <i className="fas fa-calendar-times me-2"></i>Check-out
-                          </th>
-                          <th className="py-3 px-4">
-                            <i className="fas fa-info-circle me-2"></i>Status
-                          </th>
-                          <th className="py-3 px-4 text-center">
-                            <i className="fas fa-cogs me-2"></i>Aksi
-                          </th>
+                          <th className="py-3 px-4">ID</th>
+                          <th className="py-3 px-4">Kamar</th>
+                          <th className="py-3 px-4">Check-in</th>
+                          <th className="py-3 px-4">Check-out</th>
+                          <th className="py-3 px-4">Status</th>
+                          <th className="py-3 px-4 text-center">Aksi</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -206,62 +192,44 @@ export default function UserReservasiManagement() {
                             <td className="px-4 py-3">
                               <span className="badge bg-light text-dark px-3 py-2">#{r.id}</span>
                             </td>
-                            <td className="px-4 py-3">
-                              <div className="d-flex align-items-center">
-                                <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style={{ width: "40px", height: "40px" }}>
-                                  <i className="fas fa-bed"></i>
-                                </div>
-                                <span className="fw-semibold">{r.nomor_kamar}</span>
-                              </div>
-                            </td>
+                            <td className="px-4 py-3">{r.nomor_kamar}</td>
                             {editingId === r.id ? (
                               <>
                                 <td className="px-4 py-3">
-                                  <input
-                                    type="date"
-                                    className="form-control form-control-sm"
-                                    value={editForm.tanggal_checkin || ""}
-                                    onChange={(e) =>
+                                  <DatePicker
+                                    selected={editForm.tanggal_checkin ? new Date(editForm.tanggal_checkin) : null}
+                                    onChange={(date) =>
                                       setEditForm({
                                         ...editForm,
-                                        tanggal_checkin: e.target.value,
+                                        tanggal_checkin: date.toISOString().split("T")[0],
                                       })
                                     }
+                                    dateFormat="yyyy-MM-dd"
+                                    minDate={new Date()}
+                                    className="form-control"
                                   />
                                 </td>
                                 <td className="px-4 py-3">
-                                  <input
-                                    type="date"
-                                    className="form-control form-control-sm"
-                                    value={editForm.tanggal_checkout || ""}
-                                    onChange={(e) =>
+                                  <DatePicker
+                                    selected={editForm.tanggal_checkout ? new Date(editForm.tanggal_checkout) : null}
+                                    onChange={(date) =>
                                       setEditForm({
                                         ...editForm,
-                                        tanggal_checkout: e.target.value,
+                                        tanggal_checkout: date.toISOString().split("T")[0],
                                       })
                                     }
+                                    dateFormat="yyyy-MM-dd"
+                                    minDate={editForm.tanggal_checkin ? new Date(editForm.tanggal_checkin) : new Date()}
+                                    className="form-control"
                                   />
                                 </td>
-                                <td className="px-4 py-3">
-                                  {getStatusBadge(r.status)}
-                                </td>
+                                <td className="px-4 py-3">{getStatusBadge(r.status)}</td>
                                 <td className="px-4 py-3 text-center">
-                                  <div className="btn-group" role="group">
-                                    <button
-                                      className="btn btn-success btn-sm"
-                                      onClick={() => handleUpdateSubmit(r.id)}
-                                      title="Simpan perubahan"
-                                    >
+                                  <div className="btn-group">
+                                    <button onClick={() => handleUpdateSubmit(r.id)} className="btn btn-success btn-sm me-2">
                                       <i className="fas fa-save"></i>
                                     </button>
-                                    <button
-                                      className="btn btn-secondary btn-sm"
-                                      onClick={() => {
-                                        setEditingId(null);
-                                        setEditForm({});
-                                      }}
-                                      title="Batal edit"
-                                    >
+                                    <button onClick={() => setEditingId(null)} className="btn btn-secondary btn-sm">
                                       <i className="fas fa-times"></i>
                                     </button>
                                   </div>
@@ -269,38 +237,26 @@ export default function UserReservasiManagement() {
                               </>
                             ) : (
                               <>
-                                <td className="px-4 py-3">
-                                  <div className="text-success fw-semibold">
-                                    {formatDate(r.tanggal_checkin)}
-                                  </div>
-                                </td>
-                                <td className="px-4 py-3">
-                                  <div className="text-danger fw-semibold">
-                                    {formatDate(r.tanggal_checkout)}
-                                  </div>
-                                </td>
-                                <td className="px-4 py-3">
-                                  {getStatusBadge(r.status)}
-                                </td>
+                                <td className="px-4 py-3">{formatDate(r.tanggal_checkin)}</td>
+                                <td className="px-4 py-3">{formatDate(r.tanggal_checkout)}</td>
+                                <td className="px-4 py-3">{getStatusBadge(r.status)}</td>
                                 <td className="px-4 py-3 text-center">
-                                  <div className="btn-group" role="group">
+                                  <div className="btn-group">
                                     <button
-                                      className="btn btn-outline-primary btn-sm"
                                       onClick={() => {
                                         setEditingId(r.id);
                                         setEditForm({
-                                          tanggal_checkin: r.tanggal_checkin,
-                                          tanggal_checkout: r.tanggal_checkout,
+                                          tanggal_checkin: r.tanggal_checkin?.slice(0, 10),
+                                          tanggal_checkout: r.tanggal_checkout?.slice(0, 10),
                                         });
                                       }}
-                                      title="Edit reservasi"
+                                      className="btn btn-outline-primary btn-sm me-2"
                                     >
                                       <i className="fas fa-edit"></i>
                                     </button>
                                     <button
-                                      className="btn btn-outline-danger btn-sm"
                                       onClick={() => handleDelete(r.id)}
-                                      title="Batalkan reservasi"
+                                      className="btn btn-outline-danger btn-sm"
                                     >
                                       <i className="fas fa-trash"></i>
                                     </button>

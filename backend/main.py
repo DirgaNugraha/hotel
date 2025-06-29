@@ -232,35 +232,35 @@ def batal_reservasi(id: int, db: Session = Depends(get_db), user: models.User = 
         db.commit()
     return {"message": "Reservasi dibatalkan"}
 
-# ADMIN - CRUD USER
+# ADMIN - RUD USER
 @app.get("/admin/users")
 def admin_list_users(db: Session = Depends(get_db), user: models.User = Depends(get_current_admin)):
     return db.query(models.User).all()
 
-@app.post("/admin/users")
-def admin_create_user(payload: dict = Body(...), db: Session = Depends(get_db), user: models.User = Depends(get_current_admin)):
-    nama = payload.get("nama")
-    no_telepon = payload.get("no_telepon")
-    email = payload.get("email")
-    password = payload.get("password")
-    role = payload.get("role", "tamu")
+# @app.post("/admin/users")
+# def admin_create_user(payload: dict = Body(...), db: Session = Depends(get_db), user: models.User = Depends(get_current_admin)):
+#     nama = payload.get("nama")
+#     no_telepon = payload.get("no_telepon")
+#     email = payload.get("email")
+#     password = payload.get("password")
+#     role = payload.get("role", "tamu")
 
-    if not all([nama, no_telepon, email, password]):
-        raise HTTPException(status_code=400, detail="Semua field wajib diisi.")
+#     if not all([nama, no_telepon, email, password]):
+#         raise HTTPException(status_code=400, detail="Semua field wajib diisi.")
     
-    hashed = get_password_hash(password)
-    user_obj = models.User(
-        nama=nama,
-        no_telepon=no_telepon,
-        email=email,
-        password=hashed,
-        role=role,
-        created_at=datetime.utcnow()
-    )
-    db.add(user_obj)
-    db.commit()
-    db.refresh(user_obj)
-    return user_obj
+#     hashed = get_password_hash(password)
+#     user_obj = models.User(
+#         nama=nama,
+#         no_telepon=no_telepon,
+#         email=email,
+#         password=hashed,
+#         role=role,
+#         created_at=datetime.utcnow()
+#     )
+#     db.add(user_obj)
+#     db.commit()
+#     db.refresh(user_obj)
+#     return user_obj
 
 @app.put("/admin/users/{id}")
 def admin_update_user(id: int, payload: dict = Body(...), db: Session = Depends(get_db), user: models.User = Depends(get_current_admin)):

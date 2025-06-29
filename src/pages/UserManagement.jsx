@@ -77,16 +77,16 @@ const UserManagement = () => {
     setFormData((data) => ({ ...data, [name]: value }));
   };
 
-  const handleCreateUser = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post('http://localhost:8000/users', formData);
-      setFormData({ nama: '', no_telepon: '', email: '', password: '' });
-      fetchUsers();
-    } catch (err) {
-      alert('Gagal tambah user');
-    }
-  };
+  // const handleCreateUser = async (e) => {
+  //   e.preventDefault();
+  //   try {
+  //     await axios.post('http://localhost:8000/users', formData);
+  //     setFormData({ nama: '', no_telepon: '', email: '', password: '' });
+  //     fetchUsers();
+  //   } catch (err) {
+  //     alert('Gagal tambah user');
+  //   }
+  // };
 
   const handleEditClick = (user) => {
     setEditMode(true);
@@ -128,7 +128,7 @@ const UserManagement = () => {
         </div>
 
         {/* Form */}
-        <div className="card shadow border-0 mb-5">
+        {/* <div className="card shadow border-0 mb-5">
           <div className="card-header bg-primary text-white">
             <h5 className="mb-0">
               <i className={`bi ${editMode ? 'bi-pencil-square' : 'bi-person-plus'} me-2`}></i>
@@ -204,7 +204,7 @@ const UserManagement = () => {
               </div>
             </form>
           </div>
-        </div>
+        </div> */}
 
         {/* Table */}
         <div className="card shadow border-0">
