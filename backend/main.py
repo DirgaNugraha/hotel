@@ -233,15 +233,27 @@ def update_reservasi_user(
     return {"message": "Tanggal reservasi diperbarui"}
 
 @app.delete("/user/reservasi/{id}")
-def batal_reservasi(id: int, db: Session = Depends(get_db), user: models.User = Depends(get_current_tamu)):
-    reservasi = db.query(models.Reservasi).filter(models.Reservasi.id == id, models.Reservasi.id_user == user.id).first()
-    if reservasi:
-        kamar = db.query(models.Kamar).get(reservasi.id_kamar)
+def batal_reservasi(
+    id: int,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(get_current_tamu)
+):
+    reservasi = db.query(models.Reservasi).filter(
+        models.Reservasi.id == id,
+        models.Reservasi.id_user == user.id
+    ).first()
+    if not reservasi:
+        raise HTTPException(status_code=404, detail="Reservasi tidak ditemukan")
+
+    # Cari kamar yang terkait
+    if reservasi.id_kamar:
+        kamar = db.query(models.Kamar).filter(models.Kamar.id == reservasi.id_kamar).first()
         if kamar:
             kamar.status = "tersedia"
-        db.delete(reservasi)
-        db.commit()
-    return {"message": "Reservasi dibatalkan"}
+
+    db.delete(reservasi)
+    db.commit()
+    return {"message": "Reservasi dibatalkan dan status kamar diperbarui"}
 
 # ADMIN - RUD USER
 @app.get("/admin/users")
@@ -274,20 +286,23 @@ def admin_list_users(db: Session = Depends(get_db), user: models.User = Depends(
 #     return user_obj
 
 @app.put("/admin/users/{id}")
-def admin_update_user(id: int, payload: dict = Body(...), db: Session = Depends(get_db), user: models.User = Depends(get_current_admin)):
+def admin_update_user(
+    id: int,
+    payload: dict = Body(...),
+    db: Session = Depends(get_db),
+    user: models.User = Depends(get_current_admin)
+):
     target = db.query(models.User).get(id)
     if not target:
         raise HTTPException(status_code=404, detail="User tidak ditemukan")
 
+    allowed_fields = {"nama", "no_telepon", "role"}
     for k, v in payload.items():
-        if k == "password":
-            if v:
-                target.password = get_password_hash(v)
-        else:
+        if k in allowed_fields:
             setattr(target, k, v)
-    db.commit()
-    return {"message": "User diperbarui"}
 
+    db.commit()
+    return {"message": "User diperbarui (nama, nomor telepon, dan role saja)"}
 
 
 @app.delete("/admin/users/{id}")
@@ -312,22 +327,40 @@ def admin_create_kamar(payload: dict = Body(...), db: Session = Depends(get_db),
     return kamar
 
 @app.put("/admin/kamar/{id}")
-def admin_update_kamar(id: int, payload: dict = Body(...), db: Session = Depends(get_db), user: models.User = Depends(get_current_admin)):
+def admin_update_kamar(
+    id: int,
+    payload: dict = Body(...),
+    db: Session = Depends(get_db),
+    user: models.User = Depends(get_current_admin)
+):
     kamar = db.query(models.Kamar).get(id)
     if not kamar:
         raise HTTPException(status_code=404, detail="Kamar tidak ditemukan")
+
+    # Abaikan perubahan status
     for k, v in payload.items():
+        if k == "status":
+            continue
         setattr(kamar, k, v)
     db.commit()
-    return kamar
+    return {"message": "Kamar diperbarui (status tidak diizinkan diubah)"}
 
 @app.delete("/admin/kamar/{id}")
-def admin_delete_kamar(id: int, db: Session = Depends(get_db), user: models.User = Depends(get_current_admin)):
+def admin_delete_kamar(
+    id: int,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(get_current_admin)
+):
     kamar = db.query(models.Kamar).get(id)
-    if kamar:
-        db.delete(kamar)
-        db.commit()
-    return {"message": "Kamar dihapus"}
+    if not kamar:
+        raise HTTPException(status_code=404, detail="Kamar tidak ditemukan")
+
+    # Hapus semua reservasi terkait dulu
+    db.query(models.Reservasi).filter(models.Reservasi.id_kamar == kamar.id).delete()
+
+    db.delete(kamar)
+    db.commit()
+    return {"message": "Kamar dan semua reservasi terkait berhasil dihapus"}
 
 # ADMIN - CRUD FASILITAS
 @app.get("/admin/fasilitas")
@@ -379,20 +412,40 @@ def admin_list_reservasi(
     return db.query(models.Reservasi).all()
 
 @app.put("/admin/reservasi/{id}")
-def admin_update_reservasi(id: int, payload: dict = Body(...), db: Session = Depends(get_db), user: models.User = Depends(get_current_admin)):
+def admin_update_reservasi(
+    id: int,
+    payload: dict = Body(...),
+    db: Session = Depends(get_db),
+    user: models.User = Depends(get_current_admin)
+):
     reservasi = db.query(models.Reservasi).get(id)
     if not reservasi:
         raise HTTPException(status_code=404, detail="Reservasi tidak ditemukan")
-    
+
+    # Abaikan field "status"
     for k, v in payload.items():
+        if k == "status":
+            continue
         setattr(reservasi, k, v)
     db.commit()
-    return {"message": "Reservasi diperbarui"}
+    return {"message": "Reservasi diperbarui, field status tidak diizinkan diubah"}
 
 @app.delete("/admin/reservasi/{id}")
-def admin_delete_reservasi(id: int, db: Session = Depends(get_db), user: models.User = Depends(get_current_admin)):
+def admin_delete_reservasi(
+    id: int,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(get_current_admin)
+):
     reservasi = db.query(models.Reservasi).get(id)
-    if reservasi:
-        db.delete(reservasi)
-        db.commit()
-    return {"message": "Reservasi dihapus"}
+    if not reservasi:
+        raise HTTPException(status_code=404, detail="Reservasi tidak ditemukan")
+
+    if reservasi.id_kamar:
+        kamar = db.query(models.Kamar).filter(models.Kamar.id == reservasi.id_kamar).first()
+        if kamar:
+            kamar.status = "tersedia"
+
+    db.delete(reservasi)
+    db.commit()
+    return {"message": "Reservasi dihapus dan status kamar diperbarui"}
+

@@ -94,8 +94,7 @@ const UserManagement = () => {
     setFormData({
       nama: user.nama,
       no_telepon: user.no_telepon,
-      email: user.email,
-      password: '',
+      role: user.role
     });
   };
 
@@ -109,7 +108,7 @@ const UserManagement = () => {
       );
       setEditMode(false);
       setEditId(null);
-      setFormData({ nama: '', no_telepon: '', email: '', password: '' });
+      setFormData({ nama: '', no_telepon: '', role: '' });
       fetchUsers();
     } catch (err) {
       alert('Gagal update user');
@@ -242,11 +241,9 @@ const UserManagement = () => {
                           <td>
                             <input
                               type="email"
-                              name="email"
                               className="form-control form-control-sm"
-                              value={formData.email}
-                              onChange={handleInputChange}
-                              required
+                              value={u.email}
+                              disabled
                             />
                           </td>
                           <td>
